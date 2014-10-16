@@ -49,15 +49,15 @@ public class Ghost {
 								break;
 						}
 					}
-					words.add(new Quote(string.substring(start, i - 1)));
+					words.add(new Quote(string.substring(start, --i)));
 					break;
 				}
 				default:
 					int start = i;
-					while (i < string.length() && !Character.isWhitespace(string.charAt(i)))
+					while (i < string.length() && !Character.isWhitespace(string.charAt(i)) && string.charAt(i) != '[')
 						// add error handling
 						i++;
-					String str = string.substring(start, i);
+					String str = string.substring(start, i--);
 					
 					if (Character.isDigit(str.charAt(0)) || str.charAt(0) == '-' && str.length() > 1) {
 						boolean isInt = true;
@@ -99,6 +99,19 @@ public class Ghost {
 		map.put("true", s -> s.push(new Quote("drop apply")));
 		map.put("false", s -> s.push(new Quote("swap drop apply")));
 		map.put("if", map.get("apply"));
+		map.put("typeof", s -> {
+			Word w = s.pop();
+			if (w instanceof Text)
+				s.push(new Text("Text"));
+				else if (w instanceof Int)
+					s.push(new Text("Int"));
+				else if (w instanceof Quote)
+					s.push(new Text("Quote"));
+				else if (w instanceof Function)
+					s.push(new Text("Function"));
+				else
+					s.push(new Text("Unknown"));
+			});
 		map.put("rot3", s -> {
 			Word w3 = s.pop(), w2 = s.pop(), w1 = s.pop();
 			s.push(w2);
