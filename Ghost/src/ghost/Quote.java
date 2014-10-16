@@ -5,19 +5,26 @@ import java.util.stream.Collectors;
 
 public class Quote implements Word {
 	
-	private final List<Word> value;
+	private List<Word> value;
+	private String unparsed;
 	
-	public Quote(List<Word> i) {
-		value = i;
+	public Quote(String i) {
+		unparsed = i;
+	}
+	
+	public Quote(List<Word> words) {
+		value = words;
 	}
 	
 	@Override
 	public List<Word> value() {
+		if (value == null)
+			value = Ghost.parse(unparsed);
 		return value;
 	}
 	
 	@Override
 	public String toString() {
-		return "[" + value.stream().map(w -> w.toString()).collect(Collectors.joining(" ")) + "]";
+		return "[" + value().stream().map(w -> w.toString()).collect(Collectors.joining(" ")) + "]";
 	}
 }

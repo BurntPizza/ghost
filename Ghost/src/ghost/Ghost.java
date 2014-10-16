@@ -49,7 +49,7 @@ public class Ghost {
 								break;
 						}
 					}
-					words.add(new Quote(parse(string.substring(start, i - 1))));
+					words.add(new Quote(string.substring(start, i - 1)));
 					break;
 				}
 				default:
@@ -59,7 +59,7 @@ public class Ghost {
 						i++;
 					String str = string.substring(start, i);
 					
-					if (Character.isDigit(str.charAt(0)) || str.charAt(0) == '-') {
+					if (Character.isDigit(str.charAt(0)) || str.charAt(0) == '-' && str.length() > 1) {
 						boolean isInt = true;
 						for (int d = 1; d < str.length(); d++)
 							if (!Character.isDigit(str.charAt(d))) {
@@ -95,6 +95,34 @@ public class Ghost {
 		map.put("apply", s -> s.popQuote().value().forEach(word -> word.accept(s)));
 		map.put("+", s -> s.push(new Int(s.popInt().value() + s.popInt().value())));
 		map.put("*", s -> s.push(new Int(s.popInt().value() * s.popInt().value())));
+		map.put("quote", s -> s.push(new Quote(Arrays.asList(s.pop()))));
+		map.put("true", s -> s.push(new Quote("drop apply")));
+		map.put("false", s -> s.push(new Quote("swap drop apply")));
+		map.put("if", map.get("apply"));
+		map.put("rot3", s -> {
+			Word w3 = s.pop(), w2 = s.pop(), w1 = s.pop();
+			s.push(w2);
+			s.push(w3);
+			s.push(w1);
+		});
+		Consumer<Stack> _true = map.get("true"), _false = map.get("false");
+		map.put(">", s -> {
+			Integer i2 = s.popInt().value(), i1 = s.popInt().value();
+			(i1 > i2 ? _true : _false).accept(s);
+		});
+		map.put("<", s -> {
+			Integer i2 = s.popInt().value(), i1 = s.popInt().value();
+			(i1 < i2 ? _true : _false).accept(s);
+		});
+		map.put("compose", s -> {
+			List<Word> q2 = s.popQuote().value(), q1 = s.popQuote().value();
+			q1.addAll(q2);
+			s.push(new Quote(q1));
+		});
+		map.put("join", s -> {
+			Word w2 = s.pop(), w1 = s.pop();
+			s.push(new Quote(Arrays.asList(w1, w2)));
+		});
 		map.put("-", s -> {
 			Integer i2 = s.popInt().value(), i1 = s.popInt().value();
 			s.push(new Int(i1 - i2));
