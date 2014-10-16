@@ -29,4 +29,9 @@ public class Quote implements Word {
 	public String toString() {
 		return "[" + value().stream().map(w -> w.toString()).collect(Collectors.joining(" ")) + "]";
 	}
+	
+	@Override
+	public Quote copy() {
+		return new Quote(value());
+	}
 }

@@ -2,6 +2,7 @@ package ghost;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,11 +92,12 @@ public class Ghost {
 	public static Map<String, Consumer<Stack>> builtins() {
 		Map<String, Consumer<Stack>> map = new HashMap<>();
 		
-		map.put("dup", s -> s.push(s.peek()));
+		map.put("dup", s -> s.push(s.peek().copy()));
 		map.put("drop", s -> s.pop());
 		map.put("print", s -> System.out.println(s.peek()));
 		map.put("dump", s -> System.out.println(s));
 		map.put("exit", s -> System.exit(0));
+		map.put("clear", s -> s.clear());
 		map.put("apply", s -> s.popQuote().value().forEach(word -> word.accept(s)));
 		map.put("+", s -> s.push(new Int(s.popInt().value() + s.popInt().value())));
 		map.put("*", s -> s.push(new Int(s.popInt().value() * s.popInt().value())));
@@ -109,15 +111,29 @@ public class Ghost {
 				error("Unknown identifier: " + name);
 			c.accept(s);
 		});
+		map.put("reverse", s -> {
+			Quote q = s.popQuote();
+			Collections.reverse(q.value());
+			s.push(q);
+		});
+		map.put("zip", s -> {
+			Quote q2 = s.popQuote(), q1 = s.popQuote();
+			if (q1.value().size() != q2.value().size())
+				error("Quotes must have same number of elements to zip");
+			for (int i = 0; i < q1.value().size(); i++) {
+				q1.value().set(i, new Quote(Arrays.asList(q1.value().get(i), q2.value().get(i))));
+			}
+			s.push(q1);
+		});
 		map.put("foreach", s -> {
 			List<Word> func = s.popQuote().value();
-			List<Word> words = s.popQuote().value();
-			for (int i = 0; i < words.size(); i++) {
-				s.push(words.get(i));
+			Quote q = s.popQuote();
+			for (int i = 0; i < q.value().size(); i++) {
+				s.push(q.value().get(i));
 				func.forEach(word -> word.accept(s));
-				words.set(i, s.pop());
+				q.value().set(i, s.pop());
 			}
-			s.push(new Quote(words));
+			s.push(q);
 			
 		});
 		map.put("rot3", s -> {
@@ -142,9 +158,11 @@ public class Ghost {
 			(i1 < i2 ? _true : _false).accept(s);
 		});
 		map.put("compose", s -> {
-			List<Word> q2 = s.popQuote().value(), q1 = s.popQuote().value();
-			q1.addAll(q2);
-			s.push(new Quote(q1));
+			Quote q2 = s.popQuote(), q1 = s.popQuote();
+			List<Word> list = new ArrayList<>();
+			list.addAll(q1.value());
+			list.addAll(q2.value());
+			s.push(new Quote(list));
 		});
 		map.put("join", s -> {
 			Word w2 = s.pop(), w1 = s.pop();

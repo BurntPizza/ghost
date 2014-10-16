@@ -10,4 +10,6 @@ public interface Word extends Consumer<Stack> {
 	}
 	
 	public Object value();
+	
+	public Word copy();
 }

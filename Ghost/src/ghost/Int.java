@@ -17,4 +17,9 @@ public class Int implements Word {
 	public String toString() {
 		return value.toString();
 	}
+	
+	@Override
+	public Int copy() {
+		return new Int(value());
+	}
 }

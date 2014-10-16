@@ -17,4 +17,9 @@ public class Text implements Word {
 	public String toString() {
 		return value;
 	}
+	
+	@Override
+	public Text copy() {
+		return new Text(value());
+	}
 }

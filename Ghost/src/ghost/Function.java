@@ -26,4 +26,9 @@ public class Function implements Word {
 	public String toString() {
 		return "@" + name;
 	}
+	
+	@Override
+	public Function copy() {
+		return new Function(name, value());
+	}
 }

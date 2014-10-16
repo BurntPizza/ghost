@@ -18,6 +18,10 @@ public class Stack {
 		return stack.pop();
 	}
 	
+	public void clear() {
+		stack.clear();
+	}
+	
 	public Function popFunction() {
 		Word w = stack.pop();
 		if (!(w instanceof Function))
