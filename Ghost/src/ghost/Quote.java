@@ -18,8 +18,10 @@ public class Quote implements Word {
 	
 	@Override
 	public List<Word> value() {
-		if (value == null)
+		if (value == null) {
 			value = Ghost.parse(unparsed);
+			unparsed = null;
+		}
 		return value;
 	}
 	

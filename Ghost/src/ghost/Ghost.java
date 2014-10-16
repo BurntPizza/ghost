@@ -1,6 +1,11 @@
 package ghost;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 public class Ghost {
@@ -73,9 +78,8 @@ public class Ghost {
 					}
 					
 					Consumer<Stack> f = functions.get(str);
-					if (f == null) {
+					if (f == null)
 						words.add(new Text(str));
-					}
 					else
 						words.add(new Function(str, f));
 			}
@@ -89,24 +93,46 @@ public class Ghost {
 		
 		map.put("dup", s -> s.push(s.peek()));
 		map.put("drop", s -> s.pop());
-		map.put("print", s -> System.out.println(s.pop().value()));
+		map.put("print", s -> System.out.println(s.peek()));
 		map.put("dump", s -> System.out.println(s));
 		map.put("exit", s -> System.exit(0));
 		map.put("apply", s -> s.popQuote().value().forEach(word -> word.accept(s)));
 		map.put("+", s -> s.push(new Int(s.popInt().value() + s.popInt().value())));
 		map.put("*", s -> s.push(new Int(s.popInt().value() * s.popInt().value())));
 		map.put("quote", s -> s.push(new Quote(Arrays.asList(s.pop()))));
-		map.put("true", s -> s.push(new Quote("drop apply")));
-		map.put("false", s -> s.push(new Quote("swap drop apply")));
 		map.put("if", map.get("apply"));
 		map.put("typeof", s -> s.push(new Text(s.pop().getClass().getSimpleName())));
+		map.put("call", s -> {
+			String name = s.popText().value();
+			Consumer<Stack> c = functions.get(name);
+			if (c == null)
+				error("Unknown identifier: " + name);
+			c.accept(s);
+		});
+		map.put("foreach", s -> {
+			List<Word> func = s.popQuote().value();
+			List<Word> words = s.popQuote().value();
+			for (int i = 0; i < words.size(); i++) {
+				s.push(words.get(i));
+				func.forEach(word -> word.accept(s));
+				words.set(i, s.pop());
+			}
+			s.push(new Quote(words));
+			
+		});
 		map.put("rot3", s -> {
 			Word w3 = s.pop(), w2 = s.pop(), w1 = s.pop();
 			s.push(w2);
 			s.push(w3);
 			s.push(w1);
 		});
-		Consumer<Stack> _true = map.get("true"), _false = map.get("false");
+		
+		Quote _true = new Quote("drop apply");
+		Quote _false = new Quote("swap drop apply");
+		
+		map.put("true", s -> s.push(_true));
+		map.put("false", s -> s.push(_false));
+		
 		map.put(">", s -> {
 			Integer i2 = s.popInt().value(), i1 = s.popInt().value();
 			(i1 > i2 ? _true : _false).accept(s);
