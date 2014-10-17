@@ -1,5 +1,6 @@
 package ghost;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,8 @@ public class Quote implements Word {
 	@Override
 	public List<Word> value() {
 		if (value == null) {
-			value = Ghost.parse(unparsed);
+			value = new ArrayList<>();
+			Ghost.interpret(unparsed, value::add);
 			unparsed = null;
 		}
 		return value;

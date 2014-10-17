@@ -1,12 +1,6 @@
 package ghost;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class Ghost {
@@ -18,14 +12,12 @@ public class Ghost {
 		try (Scanner s = new Scanner(System.in)) {
 			Stack stack = new Stack();
 			while (true) {
-				parse(s.nextLine()).forEach(word -> word.accept(stack));
+				interpret(s.nextLine(), w -> w.accept(stack));
 			}
 		}
 	}
 	
-	public static List<Word> parse(String string) {
-		List<Word> words = new ArrayList<>();
-		
+	public static void interpret(String string, Consumer<Word> pipe) {
 		for (int i = 0; i < string.length(); i++) {
 			char c = string.charAt(i);
 			if (Character.isWhitespace(c))
@@ -39,7 +31,7 @@ public class Ghost {
 					String str = string.substring(start, i);
 					if (str.contains("\\\""))
 						str = str.replace("\\\"", "\"");
-					words.add(new Text(str));
+					pipe.accept(new Text(str));
 					break;
 				}
 				case '[': {
@@ -55,7 +47,7 @@ public class Ghost {
 								break;
 						}
 					}
-					words.add(new Quote(string.substring(start, --i)));
+					pipe.accept(new Quote(string.substring(start, --i)));
 					break;
 				}
 				default:
@@ -73,24 +65,23 @@ public class Ghost {
 								break;
 							}
 						if (isInt) {
-							words.add(new Int(Integer.parseInt(str)));
+							pipe.accept(new Int(Integer.parseInt(str)));
 							break;
 						}
 					}
 					
 					Consumer<Stack> f = functions.get(str);
 					if (f == null)
-						words.add(new Text(str));
+						pipe.accept(new Text(str));
 					else
-						words.add(new Function(str, f));
+						pipe.accept(new Function(str, f));
 			}
 		}
-		
-		return words;
 	}
 	
 	public static Map<String, Consumer<Stack>> builtins() {
-		Map<String, Consumer<Stack>> map = new HashMap<>();
+		functions = new HashMap<>();
+		Map<String, Consumer<Stack>> map = functions;
 		
 		map.put("dup", s -> s.push(s.peek().copy()));
 		map.put("drop", s -> s.pop());
@@ -134,7 +125,6 @@ public class Ghost {
 				q.value().set(i, s.pop());
 			}
 			s.push(q);
-			
 		});
 		map.put("rot3", s -> {
 			Word w3 = s.pop(), w2 = s.pop(), w1 = s.pop();
@@ -181,11 +171,34 @@ public class Ghost {
 			s.push(w1);
 			s.push(w2);
 		});
+		Consumer<Stack> apply = map.get("apply");
+		map.put("filter", s -> {
+			Quote pred = s.popQuote();
+			Quote data = s.popQuote();
+			List<Word> list = data.value();
+			int pos = 0;
+			for (int i = 0; i < list.size(); i++) {
+				Word w = list.get(i);
+				s.push(w);
+				s.push(pred);
+				apply.accept(s);
+				if (s.pop() == _true)
+					list.set(pos++, w);
+			}
+			for (int i = list.size(); --i >= pos;)
+				list.remove(i);
+			s.push(data);
+		});
 		map.put("def", s -> {
 			String name = s.popText().value();
 			List<Word> words = s.popQuote().value();
-			functions.put(name, stack -> words.forEach(word -> word.accept(stack)));
+			map.put(name, stack -> words.forEach(word -> word.accept(stack)));
 		});
+		
+		Stack s = new Stack();
+		interpret("[[quote] foreach] split def", w -> w.accept(s));
+		interpret("[[] swap [compose 0] foreach drop] merge def", w -> w.accept(s));
+		//interpret("", w -> w.accept(s)); // add more defs
 		
 		return map;
 	}
