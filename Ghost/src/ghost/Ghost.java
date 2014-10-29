@@ -214,8 +214,8 @@ public class Ghost {
 		interpret("[[] swap [compose] foreach] merge def", w -> w.accept(s));
 		interpret("[zip merge] interleave def", w -> w.accept(s));
 		interpret("[swap [drop dup] map merge swap drop] fill def", w -> w.accept(s));
-		// eh why not
-		interpret("[dup [drop 1] [dup 2 - fib swap 1 - fib +] rot3 3 < if] fib def", w -> w.accept(s));
+		// maybe don't include this, as it is the example in the readme
+		//interpret("[dup [drop 1] [dup 2 - fib swap 1 - fib +] rot3 3 < if] fib def", w -> w.accept(s));
 		return map;
 	}
 	
