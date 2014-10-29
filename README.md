@@ -17,7 +17,7 @@ Compute and print the 20th Fibonacci number:
 <hr>
 Ghost is a concatenative, stack based language partly inspired by [Forth](http://en.wikipedia.org/wiki/Forth_(programming_language)).
 This means that all program elements are functions that take a stack as an argument, and return a stack as a result.
-The returned stack is not necessarily the same stack that was consumed, although there is no semantic difference between the two models. There is a mathematical difference though: treating the consumed stack and returned stack as different means that most functions will be pure, even if the modify the stack. This has clever and interesting consequences.
+The returned stack is not necessarily the same stack that was consumed, although there is no semantic difference between the two models. There is a mathematical difference though: treating the consumed stack and returned stack as different means that most functions will be pure, even if they modify the stack. This has clever and interesting consequences.
 For more about stack languages: http://evincarofautumn.blogspot.com/2012/02/why-concatenative-programming-matters.html
 
 A program is simply the composition of its constituent functions, as are functions themselves, if they are composite functions.
